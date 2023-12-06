@@ -11,7 +11,12 @@ Yuklab olish
 ```
 pip install pipenv
 ```
+
 Ishga tushurish
+```
+pipenv shell
+```
+
 
 # 3-qadam
 Kerakli kutubxonalarni o'rnatamiz:
@@ -19,6 +24,7 @@ Kerakli kutubxonalarni o'rnatamiz:
 pip install -r modullar.txt
 ```
 O'rnatish muvafaqiyatli yakunlangandan so'ng ko'dimiz joylashgan papkaga cd buyrug'i orqali boramiz 
+
 
 # 4-qadam 
 Ko'dimiz tayyor endi uni ishga tushuramiz 
