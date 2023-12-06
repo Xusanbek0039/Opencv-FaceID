@@ -8,9 +8,9 @@ Win+R cmd -> Ok
 # 2-qadam
 Pipenv muhitini ishga tushuramiz bo'lmasa yuklab olamiz
 Yuklab olish
-'''
+```
 pip install pipenv
-'''
+```
 Ishga tushurish
 '''
 # 3-qadam
