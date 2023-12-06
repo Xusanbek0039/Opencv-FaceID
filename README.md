@@ -1,6 +1,6 @@
 # Opencv-FaceID
 
-# Ishga tushurish tartibi
+# Ishga tushurish tartibi 🔥🔥🔥
 
 # 1-qadam
 Windowsda CMD ni ochamiz
@@ -34,7 +34,7 @@ CMD ga yozishimiz kerak:
 python yuz.py
 ```
 
-# By Suyunov Husan
+# By Suyunov Husan 👨🏼‍💻
 🫡[Telegram](https://t.me/mBin_Dev_0071)
 
 🫡[Instagram](https://www.instagram.com/husanbek_dev/)
