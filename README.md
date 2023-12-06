@@ -5,7 +5,7 @@
 Windowsda CMD ni ochamiz
 Win+R cmd -> Ok 
 
-2-qadam
+# 2-qadam
 Pipenv muhitini ishga tushuramiz bo'lmasa yuklab olamiz
 Yuklab olish
 '''
@@ -13,14 +13,14 @@ pip install pipenv
 '''
 Ishga tushurish
 '''
-3-qadam
+# 3-qadam
 Kerakli kutubxonalarni o'rnatamiz:
 '''
 pip install -r modullar.txt
 '''
 O'rnatish muvafaqiyatli yakunlangandan so'ng ko'dimiz joylashgan papkaga cd buyrug'i orqali boramiz 
 
-4-qadam 
+# 4-qadam 
 Ko'dimiz tayyor endi uni ishga tushuramiz 
 CMD ga yozishimiz kerak:
 '''
@@ -28,6 +28,6 @@ python yuz.py
 '''
 
 # Sizlar bilan Suyunov Husan
-[Telegram](https://t.me/mBin_Dev_0071)
-[Instagram](https://www.instagram.com/husanbek_dev/)
-[GitHub](https://github.com/xusanbek0071)
+# [Telegram](https://t.me/mBin_Dev_0071)
+# [Instagram](https://www.instagram.com/husanbek_dev/)
+# [GitHub](https://github.com/xusanbek0071)
