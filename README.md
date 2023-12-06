@@ -1,6 +1,7 @@
 # Opencv-FaceID
 
 # Ishga tushurish tartibi 🔥🔥🔥
+</>
 
 # 1-qadam
 Windowsda CMD ni ochamiz
