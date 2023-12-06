@@ -1,9 +1,10 @@
 # Opencv-FaceID
 
 # Ishga tushurish tartibi
-1-qadam
+
+# 1-qadam
 Windowsda CMD ni ochamiz
-Win+R cmd -> Ok 
+Win+R -> cmd -> Ok 
 
 # 2-qadam
 Pipenv muhitini ishga tushuramiz bo'lmasa yuklab olamiz
@@ -33,7 +34,9 @@ CMD ga yozishimiz kerak:
 python yuz.py
 ```
 
-# Sizlar bilan Suyunov Husan
-# [Telegram](https://t.me/mBin_Dev_0071)
-# [Instagram](https://www.instagram.com/husanbek_dev/)
-# [GitHub](https://github.com/xusanbek0071)
+# By Suyunov Husan
+🫡[Telegram](https://t.me/mBin_Dev_0071)
+
+🫡[Instagram](https://www.instagram.com/husanbek_dev/)
+
+🫡[GitHub](https://github.com/xusanbek0071)
