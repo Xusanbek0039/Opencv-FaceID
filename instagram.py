@@ -107,6 +107,44 @@ def download_instagram_video(url):
     except Exception as e:
         print(f"❌ Xatolik: {e}")
         return None
+    
+def download_instagram_media(url):
+    try:
+        L = instaloader.Instaloader()
+        
+        # URLni to'g'ri formatga o'tkazish
+        if "share/reel/" in url:
+            url = url.replace("share/reel/", "reel/")  # Shortlinkni to'g'ri formatga keltirish
+        
+        shortcode = url.rstrip('/').split("/")[-1]  # URLdan shortcode olish
+        post = instaloader.Post.from_shortcode(L.context, shortcode)
+
+        if post.is_video:
+            return {"type": "video", "content": requests.get(post.video_url).content}
+        else:
+            return {"type": "photo", "content": [requests.get(img).content for img in post.get_sidecar_nodes()]} if post.typename == "GraphSidecar" else {"type": "photo", "content": [requests.get(post.url).content]}
+    except Exception as e:
+        print(f"❌ Xatolik: {e}")
+        return None
+
+async def handle_message(update: Update, context: CallbackContext):
+    user = update.message.from_user
+    text = update.message.text
+    
+    if "instagram.com" in text:
+        await update.message.reply_text("⏳ Media yuklanmoqda... Iltimos, kuting.")
+        media_url, media_type = download_instagram_media(text)
+        
+        if media_url:
+            if media_type == "video":
+                await update.message.reply_video(video=media_url, caption="Sizning Instagram videosi 🎥")
+            else:
+                await update.message.reply_photo(photo=media_url, caption="Sizning Instagram rasmi 🖼")
+        else:
+            await update.message.reply_text("❌ Media yuklab olinmadi. Havolani tekshirib, qaytadan yuboring!")
+    else:
+        await update.message.reply_text("❌ Iltimos, faqat Instagram media havolasini yuboring!")
+
 
 def save_to_file(user_info, user_id, url, success, request_number):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
