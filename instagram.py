@@ -156,7 +156,7 @@ async def start(update: Update, context: CallbackContext):
         f"📹 *YouTube sahifamizga obuna bo'ling:* [📺 YouTube Kanalimiz](https://www.youtube.com/@it\\_creative)\n"
         f"♻️ *Botni qayta ishga tushurish uchun* /start *ni bosing:*",
         reply_markup=reply_markup,
-        parse_mode="MarkdownV2"
+        parse_mode="Markdown"
     )
 async def button_handler(update: Update, context: CallbackContext):
     query = update.callback_query
