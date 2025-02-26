@@ -243,7 +243,7 @@ async def handle_message(update: Update, context: CallbackContext):
         video_content = download_instagram_video(text)
         if video_content:
             increment_user_limit(user.id, user.username, user.first_name, user.last_name)
-            await update.message.reply_video(video=video_content, caption=f"🔗 Havola: {text}\n#️⃣ Ariza raqami: {request_number}\nSizning qolgan kunlik limitingiz: {remaining_limit - 1}/{DAILY_LIMIT}\nbotni qayta ishga tushurish uchun /start")
+            await update.message.reply_video(video=video_content, caption=f"🔗 Havola: {text}\n#️⃣ Ariza raqami: {request_number}\nSizning qolgan kunlik limitingiz: {remaining_limit - 1}/{DAILY_LIMIT}\nBotni qayta ishga tushurish uchun /start")
             save_to_file(f"{user.first_name or ''} {user.last_name or ''} @{user.username or 'Nomalum'}", user.id, text, True, request_number)
         else:
             save_to_file(f"{user.first_name or ''} {user.last_name or ''} @{user.username or 'Nomalum'}", user.id, text, False, request_number)
