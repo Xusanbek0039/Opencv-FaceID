@@ -40,7 +40,7 @@ while True:
             response = "Assalom alaykum"
             print(f"Bot: {response}")
             speak(response)
-        elif text.lower() == "to‘xta" or text.lower() == "stop":
+        elif text.lower() == "xayr" or text.lower() == "stop":
             print("Bot: Dastur to‘xtatildi.")
             speak("Dastur to‘xtatildi.")
             break  # While loop dan chiqish
