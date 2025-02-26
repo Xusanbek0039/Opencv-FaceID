@@ -190,8 +190,8 @@ async def start(update: Update, context: CallbackContext):
         f"*Assalomu alaykum va rohmatullohi va barokatuh\\!* 🌿\n"
         f"👤 *Hurmatli {user.first_name}*, Botimizga Xush kelibsiz\\!👋 \n"
         f"🆔 *Raqamingiz:* `{user.id}`\n"
-        f"🤖 *Bot yaratuvchisi:* [Husanbek Suyunov](https://husanbek\\-coder.uz)\n"
-        f"📹 *YouTube sahifamizga obuna bo'ling:* [📺 YouTube Kanalimiz](https://www.youtube.com/@it\\_creative)\n"
+        f"🤖 *Bot yaratuvchisi:* [Husanbek Suyunov](https://husanbek-coder.uz)\n"
+        f"📹 *YouTube sahifamizga obuna bo'ling:* [📺 YouTube Kanalimiz](https://www.youtube.com/@it_creative)\n"
         f"♻️ *Botni qayta ishga tushurish uchun* /start *ni bosing:*",
         reply_markup=reply_markup,
         parse_mode="Markdown"
