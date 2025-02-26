@@ -15,12 +15,33 @@ logging.basicConfig(level=logging.INFO)
 DOWNLOAD_FOLDER = "downloads"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
-BAZA_FILE = "baza.txt"
+HTML_FILE = "index.html"
 
-def save_to_file(username, full_name, link):
-    """Foydalanuvchi ma'lumotlarini baza.txt fayliga yozadi"""
-    with open(BAZA_FILE, "a", encoding="utf-8") as file:
-        file.write(f"👤 User: {username} | 👥 Ism: {full_name} | 🔗 Havola: {link}\n")
+def save_to_html(username, full_name, link):
+    """Foydalanuvchi ma'lumotlarini HTML faylga saqlaydi"""
+    if not os.path.exists(HTML_FILE):
+        with open(HTML_FILE, "w", encoding="utf-8") as file:
+            file.write("""
+            <html>
+            <head><title>Saqlangan YouTube Havolalar</title></head>
+            <body>
+                <h2>Foydalanuvchilar yuborgan YouTube havolalar</h2>
+                <table border='1' cellpadding='5' cellspacing='0'>
+                    <tr>
+                        <th>👤 Username</th>
+                        <th>👥 Ism</th>
+                        <th>🔗 Havola</th>
+                    </tr>
+            """)
+
+    with open(HTML_FILE, "a", encoding="utf-8") as file:
+        file.write(f"""
+            <tr>
+                <td>{username}</td>
+                <td>{full_name}</td>
+                <td><a href="{link}" target="_blank">{link}</a></td>
+            </tr>
+        """)
 
 @dp.message(F.text == "/start")
 async def start_command(message: types.Message):
@@ -32,7 +53,7 @@ async def process_youtube_link(message: types.Message):
     user = message.from_user.username or "No Username"
     full_name = message.from_user.full_name
 
-    save_to_file(user, full_name, url)  # Ma'lumotlarni faylga yozamiz
+    save_to_html(user, full_name, url)  # Ma'lumotlarni HTML faylga yozamiz
 
     try:
         yt = YouTube(url)
