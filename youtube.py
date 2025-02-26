@@ -1,87 +1,168 @@
-from aiogram import Bot, Dispatcher, types, F
-import asyncio
-import logging
 import os
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from pytube import YouTube
+import subprocess
+import json
+from datetime import datetime
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, CallbackContext, filters
 
-TOKEN = "6849473588:AAEEt5wy0Mq3Dja3yJ--GXzRcavWqoev7_A"
+TOKEN = "6849473588:AAHKCSjNPD_Po7D86lDnw9nDlvbJyt7mQPs"
+DB_FILE = "baza.txt"
+LOG_FILE = "log.txt"
+LIMIT = 10  # Kunlik limit
 
-bot = Bot(token=TOKEN)
-dp = Dispatcher()
+def load_users():
+    if not os.path.exists(DB_FILE):
+        return {}
+    with open(DB_FILE, "r", encoding="utf-8") as f:
+        try:
+            return json.load(f)
+        except json.JSONDecodeError:
+            return {}
 
-logging.basicConfig(level=logging.INFO)
+def save_users(users):
+    with open(DB_FILE, "w", encoding="utf-8") as f:
+        json.dump(users, f, indent=4, ensure_ascii=False)
 
-DOWNLOAD_FOLDER = "downloads"
-os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
+def log_message(message):
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {message}\n")
+    print(message)
 
-HTML_FILE = "index.html"
+async def start(update: Update, context: CallbackContext):
+    users = load_users()
+    user_id = str(update.message.from_user.id)
 
-def save_to_html(username, full_name, link):
-    """Foydalanuvchi ma'lumotlarini HTML faylga saqlaydi"""
-    if not os.path.exists(HTML_FILE):
-        with open(HTML_FILE, "w", encoding="utf-8") as file:
-            file.write("""
-            <html>
-            <head><title>Saqlangan YouTube Havolalar</title></head>
-            <body>
-                <h2>Foydalanuvchilar yuborgan YouTube havolalar</h2>
-                <table border='1' cellpadding='5' cellspacing='0'>
-                    <tr>
-                        <th>👤 Username</th>
-                        <th>👥 Ism</th>
-                        <th>🔗 Havola</th>
-                    </tr>
-            """)
+    if user_id not in users:
+        users[user_id] = {"limit": LIMIT, "links": []}
+        save_users(users)
+    
+    await update.message.reply_text("🎥 YouTube video havolasini yuboring!")
 
-    with open(HTML_FILE, "a", encoding="utf-8") as file:
-        file.write(f"""
-            <tr>
-                <td>{username}</td>
-                <td>{full_name}</td>
-                <td><a href="{link}" target="_blank">{link}</a></td>
-            </tr>
-        """)
+async def get_video_info(update: Update, context: CallbackContext):
+    users = load_users()
+    user_id = str(update.message.from_user.id)
+    url = update.message.text.strip()
 
-@dp.message(F.text == "/start")
-async def start_command(message: types.Message):
-    await message.answer("🎥 Salom! Menga YouTube havolani yuboring, men esa sizga videoni yuklab beraman.")
+    if "youtube.com" not in url and "youtu.be" not in url:
+        await update.message.reply_text("❌ Iltimos, faqat YouTube havolasini yuboring.")
+        return
+    
+    if user_id not in users:
+        await update.message.reply_text("❌ Iltimos, avval /start buyrug'ini bosing.")
+        return
+    
+    if users[user_id]["limit"] <= 0:
+        await update.message.reply_text("🚫 Kunlik limit tugadi. Ertaga qayta urinib ko'ring!")
+        return
 
-@dp.message(F.text.startswith("http"))
-async def process_youtube_link(message: types.Message):
-    url = message.text
-    user = message.from_user.username or "No Username"
-    full_name = message.from_user.full_name
+    users[user_id]["links"].append({"url": url, "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+    save_users(users)
 
-    save_to_html(user, full_name, url)  # Ma'lumotlarni HTML faylga yozamiz
+    # Video haqida ma’lumot olish
+    command = f'yt-dlp -J {url}'
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        video_data = json.loads(result.stdout)
+
+        title = video_data.get("title", "Noma’lum video")
+        thumbnail = video_data.get("thumbnail", None)
+        duration = video_data.get("duration", "Noma’lum vaqt")
+        view_count = video_data.get("view_count", "Noma’lum")
+        upload_date = video_data.get("upload_date", "Noma’lum")
+
+        # Fayl hajmlarini olish
+        formats = video_data.get("formats", [])
+        format_sizes = {}
+
+        for f in formats:
+            height = f.get("height")
+            filesize = f.get("filesize", 0)
+
+            if height in [360, 480, 720] and filesize:
+                format_sizes[str(height)] = round(filesize / (1024 * 1024), 1)  # MB ga o‘girish
+
+        # Tugmalar yaratish
+        keyboard = [
+            [InlineKeyboardButton(f"🔻📹 360p - {format_sizes.get('360', 'Noma’lum')} MB", callback_data=f"{url}|360p")],
+            [InlineKeyboardButton(f"🔻📹 480p - {format_sizes.get('480', 'Noma’lum')} MB", callback_data=f"{url}|480p")],
+            [InlineKeyboardButton(f"🔻📹 720p - {format_sizes.get('720', 'Noma’lum')} MB", callback_data=f"{url}|720p")],
+            [InlineKeyboardButton(f"🔻🎧 Audio - Noma’lum MB", callback_data=f"{url}|audio")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        text = (
+            f"🎬 *{title}*\n"
+            f"📅 Yuklangan sana: {upload_date}\n"
+            f"👀 Ko‘rishlar soni: {view_count}\n"
+            f"⏰ {duration} soniya\n\n"
+            f"Tanlang va yuklab oling:"
+        )
+
+        if thumbnail:
+            await update.message.reply_photo(photo=thumbnail, caption=text, reply_markup=reply_markup, parse_mode="Markdown")
+        else:
+            await update.message.reply_text(text, reply_markup=reply_markup, parse_mode="Markdown")
+
+    except Exception as e:
+        log_message(f"Xatolik: {e}")
+        await update.message.reply_text("❌ Video ma'lumotlarini olishda xatolik yuz berdi.")
+
+async def download_video(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await query.answer()
+    
+    user_id = str(query.from_user.id)
+    users = load_users()
+
+    if user_id not in users:
+        await query.message.reply_text("❌ Iltimos, avval /start buyrug'ini bosing.")
+        return
+
+    if users[user_id]["limit"] <= 0:
+        await query.message.reply_text("🚫 Kunlik limit tugadi. Ertaga qayta urinib ko'ring!")
+        return
+
+    users[user_id]["limit"] -= 1
+    save_users(users)
+
+    # Callback_data'dan URL va formatni ajratib olish
+    data = query.data.split("|")
+    url = data[0]
+    quality = data[1]
+
+    await query.message.reply_text(f"🔄 {quality} formatda yuklanmoqda... Bir necha soniya kuting.")
+
+    file_ext = "mp4" if quality != "audio" else "mp3"
+    video_path = f"video.{file_ext}"
 
     try:
-        yt = YouTube(url, use_oauth=True, allow_oauth_cache=True)
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=f"📹 {stream.resolution}", callback_data=f"download_{stream.resolution}_{url}")]
-            for stream in yt.streams.filter(progressive=True, file_extension="mp4").order_by("resolution")
-        ])
-        await message.answer(f"🎬 *{yt.title}* videosini qaysi formatda yuklamoqchisiz?", reply_markup=keyboard, parse_mode="Markdown")
+        format_flag = {
+            "360p": "best[height<=360]",
+            "480p": "best[height<=480]",
+            "720p": "best[height<=720]",
+            "audio": "bestaudio"
+        }
+
+        command = f'yt-dlp -f "{format_flag[quality]}" -o "{video_path}" {url}'
+        subprocess.run(command, shell=True, check=True)
+
+        with open(video_path, "rb") as video:
+            await query.message.reply_document(document=video, filename=f"video.{file_ext}")
+        os.remove(video_path)
+        
+        log_message(f"{user_id} uchun video yuklandi: {url}, Sifat: {quality}")
     except Exception as e:
-        await message.answer(f"⚠ Xatolik yuz berdi: {str(e)}")
+        await query.message.reply_text(f"❌ Xatolik yuz berdi: {e}")
+        log_message(f"{user_id} uchun video yuklash muvaffaqiyatsiz: {url}, Xatolik: {e}")
 
-@dp.callback_query(F.data.startswith("download_"))
-async def download_video(call: types.CallbackQuery):
-    _, resolution, url = call.data.split("_")
-    await call.message.edit_text(f"📥 Yuklanmoqda... {resolution}")
+def main():
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, get_video_info))
+    app.add_handler(CallbackQueryHandler(download_video))
 
-    try:
-        yt = YouTube(url, use_oauth=True, allow_oauth_cache=True)
-        video = yt.streams.filter(progressive=True, file_extension="mp4", resolution=resolution).first()
-        file_path = video.download(DOWNLOAD_FOLDER)
-
-        await bot.send_video(call.message.chat.id, open(file_path, "rb"), caption=f"🎥 {yt.title} ({resolution}) yuklandi!")
-        os.remove(file_path)  # Faylni o‘chirib tashlaymiz
-    except Exception as e:
-        await call.message.edit_text(f"⚠ Yuklashda xatolik: {str(e)}")
-
-async def main():
-    await dp.start_polling(bot)
+    print("🚀 Bot ishga tushdi...")
+    app.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
