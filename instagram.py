@@ -6,7 +6,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Cal
 from datetime import datetime
 
 # Bot tokenini shu yerga yozing
-TOKEN = '6849473588:AAHKCSjNPD_Po7D86lDnw9nDlvbJyt7mQPs'
+TOKEN = '7910397008:AAFKMo6TVxHN7GFF1MrbORytkf-bjfIdsAw'
 
 # Foydalanuvchi xizmat sanog'ini saqlash
 USER_LIMIT = 1_000_000
