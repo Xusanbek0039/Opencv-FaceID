@@ -15,8 +15,6 @@ logging.basicConfig(level=logging.INFO)
 DOWNLOAD_FOLDER = "downloads"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
-
-
 HTML_FILE = "index.html"
 
 def save_to_html(username, full_name, link):
@@ -58,7 +56,7 @@ async def process_youtube_link(message: types.Message):
     save_to_html(user, full_name, url)  # Ma'lumotlarni HTML faylga yozamiz
 
     try:
-        yt = YouTube(url)
+        yt = YouTube(url, use_oauth=True, allow_oauth_cache=True)
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text=f"📹 {stream.resolution}", callback_data=f"download_{stream.resolution}_{url}")]
             for stream in yt.streams.filter(progressive=True, file_extension="mp4").order_by("resolution")
@@ -73,7 +71,7 @@ async def download_video(call: types.CallbackQuery):
     await call.message.edit_text(f"📥 Yuklanmoqda... {resolution}")
 
     try:
-        yt = YouTube(url)
+        yt = YouTube(url, use_oauth=True, allow_oauth_cache=True)
         video = yt.streams.filter(progressive=True, file_extension="mp4", resolution=resolution).first()
         file_path = video.download(DOWNLOAD_FOLDER)
 
