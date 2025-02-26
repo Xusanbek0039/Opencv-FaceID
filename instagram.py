@@ -136,16 +136,58 @@ def log_activity(user, message):
     print(log_message)
 
 
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.constants import ChatMemberStatus
+from telegram.ext import CallbackContext
+from telegram import Update
+
+CHANNEL_USERNAME = "@IT_Creative_News"  # Kanal username
+
+async def is_user_subscribed(user_id, context):
+    try:
+        member = await context.bot.get_chat_member(CHANNEL_USERNAME, user_id)
+        return member.status in [ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER]
+    except Exception:
+        return False  # Xatolik bo'lsa, foydalanuvchi obuna emas deb qabul qilamiz
+
 async def start(update: Update, context: CallbackContext):
     user = update.message.from_user
-    log_activity(user, "Start bosdi")  # Start bosganini logga yozish
+    user_id = user.id  # User ID olish
 
+    # 🔍 Kanalga obuna bo'lganligini tekshiramiz
+    is_subscribed = await is_user_subscribed(user_id, context)
+
+    if not is_subscribed:
+        keyboard = [[InlineKeyboardButton("📢 Kanalga obuna bo'lish", url=f"https://t.me/{CHANNEL_USERNAME[1:]}")]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await update.message.reply_text(
+            "⚠️ Botdan foydalanish uchun avval kanalimizga obuna bo'ling!", 
+            reply_markup=reply_markup
+        )
+        return  # Obuna bo'lmagan bo'lsa, kodni davom ettirmaymiz
+
+    # 🎛️ Agar foydalanuvchi obuna bo‘lgan bo‘lsa, bot menyusi chiqadi
     keyboard = [
         [InlineKeyboardButton("📊 Limitni ko'rish", callback_data='limit')],
-        [InlineKeyboardButton("ℹ️ Biz haqimizda", callback_data='about')]
+        [InlineKeyboardButton("ℹ️ Biz haqimizda", callback_data='about')],
+        [InlineKeyboardButton("🤖 Bot statistikasi", callback_data='statistika')],
+        [InlineKeyboardButton("👤 Admin bilan bog'lanish", callback_data='admin')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Quyidagi tugmalardan birini tanlang:", reply_markup=reply_markup)
+
+    await update.message.reply_text(
+        f"*Assalomu alaykum va rohmatullohi va barokatuh\\!* 🌿\n"
+        f"👤 *Hurmatli {user.first_name}*, Botimizga Xush kelibsiz\\!👋 \n"
+        f"🆔 *Raqamingiz:* `{user_id}`\n"
+        f"🤖 *Bot yaratuvchisi:* [Husanbek Coder](https://husanbek\\-coder.uz)\n"
+        f"📹 *YouTube sahifamizga obuna bo'ling va botdan foydalanishni davom ettiring:*\n"
+        f"[📺 YouTube kanali](https://www.youtube.com/@it\\_creative)\n"
+        f"♻️ *Botni qayta ishga tushurish uchun* /start *ni bosing:*",
+        reply_markup=reply_markup,
+        parse_mode="MarkdownV2"  # ✅ MarkdownV2 formatidan foydalanish
+    )
+
+
 
 async def button_handler(update: Update, context: CallbackContext):
     query = update.callback_query
@@ -157,7 +199,13 @@ async def button_handler(update: Update, context: CallbackContext):
         used_limit, remaining_limit = check_user_limit(user_id, user.username, user.first_name, user.last_name)
         await query.message.reply_text(f"📊 Sizning bugungi foydalangan limitingiz: {used_limit}")
     elif query.data == "about":
-        await query.message.reply_text("ℹ️ Biz haqimizda: Bu bot Instagram reels videolarini yuklab olish uchun yaratilgan.")
+        await query.message.reply_text("ℹ️ Biz haqimizda: Bu bot Instagram reels videolarini yuklab olish uchun yaratilgan.\nBotni qayta ishga tushurish uchun /start")
+    elif query.data == "admin":
+        await query.message.reply_text("Admin bilan bog'lanish uchun:\n@mBin_Dev_0039 telegram manzil\n+998 97 521 66 86 A'loqa raqami orqali\nBog'lanishingiz mumkin.\nBotni qayta ishga tushurish uchun /start")
+    elif query.data == "statistika":
+        await statistikani_korsat(update, context)  # Statistika funktsiyasini chaqirish
+    print(f"🔘Inline tugma bosildi: {query.data} | 👤Foydalanuvchi ID: {user_id}")  # Debug uchun
+
 
 async def handle_message(update: Update, context: CallbackContext):
     user = update.message.from_user
@@ -167,43 +215,109 @@ async def handle_message(update: Update, context: CallbackContext):
     if any(word in text.lower() for word in ["salom", "assalom", "salomm"]):
         await update.message.reply_text("Assalom alekom! 😊\nMenga Instagram havola yuboring men sizga Video qilib yuboraman!")
         return
-    elif any(word in text.lower() for word in ["rahmat", "raxmat", " "]):
+    elif any(word in text.lower() for word in ["rahmat", "raxmat"]):
         await update.message.reply_text("Bizning xizmatlardan foydalanganingiz uchun tashakkur! 😊")
         return
     elif any(word in text.lower() for word in ["qalesan", "qalisan", "qlesan","qaleysan"]):
         await update.message.reply_text("Yaxshi raxmat! 😊\nMenga Instagram havola yuboring men sizga Video qilib yuboraman!")
         return
-
+    elif any(word in text.lower() for word in ["💋"]):
+        await update.message.reply_text("😊")
+        await update.message.reply_text("His tuyg'ularga berilmang!\nHavola yuboring!")
+        return
+    elif any(word in text.lower() for word in ["admin"]):
+        await update.message.reply_text("Admin bilan bog'lanish uchun:\n@mBin_Dev_0039 telegram manzil\n+998 97 521 66 86 A'loqa raqami orqali\nBog'lanishingiz mumkin.\nBotni qayta ishga tushurish uchun /start")
+        return
     if "instagram.com" in text:
         used_limit, remaining_limit = check_user_limit(user.id, user.username, user.first_name, user.last_name)
         if used_limit >= DAILY_LIMIT:
-            await update.message.reply_text(f"❌ Sizning bugungi xizmat limingiz tugadi. \nLimitlar {used_limit}/{DAILY_LIMIT}")
+            await update.message.reply_text(f"❌ Sizning bugungi xizmat limingiz tugadi. \nLimitlar {used_limit}/{DAILY_LIMIT}\nBotni qayta ishga tushurish uchun /start")
             return
         
         request_number = get_next_request_number()
         if request_number is None:
-            await update.message.reply_text("❌ Umumiy xizmat limiti tugagan.")
+            await update.message.reply_text("❌ Umumiy xizmat limiti tugagan.\nBotni qayta ishga tushurish uchun /start")
             return
 
-        await update.message.reply_text("⏳ Video yuklanmoqda... Iltimos, biroz kuting.")
+        await update.message.reply_text("⏳ Video yuklanmoqda... \nIltimos, biroz kuting.")
         video_content = download_instagram_video(text)
         if video_content:
             increment_user_limit(user.id, user.username, user.first_name, user.last_name)
-            await update.message.reply_video(video=video_content, caption=f"🔗 Havola: {text}\n#️⃣ Ariza raqami: {request_number}\nSizning qolgan kunlik limitingiz: {remaining_limit - 1}/{DAILY_LIMIT}")
-            save_to_file(f"{user.first_name or ''} {user.last_name or ''} @{user.username or 'NoUsername'}", user.id, text, True, request_number)
+            await update.message.reply_video(video=video_content, caption=f"🔗 Havola: {text}\n#️⃣ Ariza raqami: {request_number}\nSizning qolgan kunlik limitingiz: {remaining_limit - 1}/{DAILY_LIMIT}\nbotni qayta ishga tushurish uchun /start")
+            save_to_file(f"{user.first_name or ''} {user.last_name or ''} @{user.username or 'Nomalum'}", user.id, text, True, request_number)
         else:
-            save_to_file(f"{user.first_name or ''} {user.last_name or ''} @{user.username or 'NoUsername'}", user.id, text, False, request_number)
-            await update.message.reply_text(f"❌ Video yuklab olishda xatolik.\n#️⃣ Ariza raqami: {request_number}")
+            save_to_file(f"{user.first_name or ''} {user.last_name or ''} @{user.username or 'Nomalum'}", user.id, text, False, request_number)
+            await update.message.reply_text(f"❌ Video yuklab olishda xatolik.\n#️⃣ Ariza raqami: {request_number} ")
     else:
-        await update.message.reply_text(f"❌ Iltimos, faqat Instagram video havolasini yuboring.")
+        await update.message.reply_text(f"❌ Iltimos, faqat Instagram video havolasini yuboring.\nBotni qayta ishga tushurish uchun /start")
+
+def get_statistics():
+    total_users = 0
+    total_requests = 0
+    today_requests = 0
+    today = datetime.now().date()
+
+    # Umumiy foydalanuvchilarni hisoblash
+    if os.path.exists("user_limits.txt"):
+        with open("user_limits.txt", "r") as f:
+            total_users = sum(1 for _ in f)  # Har bir qatorda bitta user
+
+    # Umumiy so‘rovlar sonini hisoblash
+    if os.path.exists("counter.txt"):
+        with open("counter.txt", "r") as f:
+            total_requests = int(f.read().strip())
+
+    # Bugungi so‘rovlarni hisoblash
+    if os.path.exists("user_limits.txt"):
+        with open("user_limits.txt", "r") as f:
+            for line in f:
+                parts = line.strip().split()
+                if len(parts) >= 4:
+                    date = datetime.strptime(parts[-1], "%Y-%m-%d").date()
+                    count = int(parts[-2])
+                    if date == today:
+                        today_requests += count
+
+    return total_users, total_requests, today_requests
+
+
+
+async def statistikani_korsat(update: Update, context: CallbackContext):
+    total_users, total_requests, today_requests = get_statistics()
+    
+    statistikalar = (
+        "📊 *Bot statistikasi* 📊\n\n"
+        f"👤 Umumiy foydalanuvchilar: {total_users}\n"
+        f"📥 Jami so‘rovlar: {total_requests}\n"
+        f"📅 Bugungi so‘rovlar: {today_requests}\n"
+    )
+
+    await update.callback_query.message.reply_text(statistikalar, parse_mode="Markdown")
+
+
+
+def log_message(message):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_text = f"{timestamp} - {message}\n"
+    
+    # Terminalga chiqaramiz
+    print(log_text.strip())  
+    
+    # log.txt fayliga yozamiz
+    with open("log.txt", "a", encoding="utf-8") as f:
+        f.write(log_text)
 
 def main():
+    log_message("🚀 Bot ishlamoqda...")
     application = ApplicationBuilder().token(TOKEN).build()
+    
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("statistika", statistikani_korsat))  
     application.add_handler(CallbackQueryHandler(button_handler))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    application.run_polling()
     
+    application.run_polling()
+
 
 
 
