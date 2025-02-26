@@ -15,6 +15,8 @@ logging.basicConfig(level=logging.INFO)
 DOWNLOAD_FOLDER = "downloads"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
+
+
 HTML_FILE = "index.html"
 
 def save_to_html(username, full_name, link):
