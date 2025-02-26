@@ -1,17 +1,32 @@
 import speech_recognition as sr
 import pyttsx3
+import sounddevice as sd
+import numpy as np
+import wavio
 
 recognizer = sr.Recognizer()
 engine = pyttsx3.init()
 
 def speak(text):
+    """Matnni ovozga aylantiradi"""
     engine.say(text)
     engine.runAndWait()
 
-with sr.Microphone() as source:
+def record_audio(duration=5, samplerate=44100):
+    """Mikrofondan ovoz yozib olib, faylga saqlaydi"""
     print("Gapiring...")
-    recognizer.adjust_for_ambient_noise(source)
-    audio = recognizer.listen(source)
+    audio_data = sd.rec(int(duration * samplerate), samplerate=samplerate, channels=1, dtype=np.int16)
+    sd.wait()
+    wavio.write("recorded.wav", audio_data, samplerate, sampwidth=2)
+    return "recorded.wav"
+
+while True:
+    # Ovoz yozish
+    audio_file = record_audio()
+
+    # Ovozdan matn olish
+    with sr.AudioFile(audio_file) as source:
+        audio = recognizer.record(source)
 
     try:
         text = recognizer.recognize_google(audio, language="uz-UZ")
@@ -21,6 +36,14 @@ with sr.Microphone() as source:
             response = "Assalom alaykum"
             print(f"Bot: {response}")
             speak(response)
+        if text.lower() == "shoxjaxon":
+            response = "Assalom alaykum"
+            print(f"Bot: {response}")
+            speak(response)
+        elif text.lower() == "to‘xta" or text.lower() == "stop":
+            print("Bot: Dastur to‘xtatildi.")
+            speak("Dastur to‘xtatildi.")
+            break  # While loop dan chiqish
         else:
             print("Bot: Kechirasiz, tushunmadim.")
             speak("Kechirasiz, tushunmadim.")
@@ -32,3 +55,4 @@ with sr.Microphone() as source:
     except sr.RequestError:
         print("Bot: Internetda muammo bor.")
         speak("Internetda muammo bor.")
+
